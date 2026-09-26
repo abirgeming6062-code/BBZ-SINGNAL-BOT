@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BBZ QUOTEX - Secure Bot</title>
+    <style>
+        body { background-color: #0b111e; color: white; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .bot-container { width: 360px; background: #121b2d; border-radius: 20px; padding: 20px; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); text-align: center; display: none; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 28px; font-weight: bold; letter-spacing: 2px; }
+        .status { background: #143329; color: #00ff88; padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .step-badge { background: #25395c; color: #ffea00; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; display: inline-block; margin-top: 15px; }
+        .label { text-align: left; font-size: 11px; color: #5d7290; margin-top: 15px; text-transform: uppercase; }
+        .signal-box { background: #1c2d4a; border-radius: 15px; margin-top: 15px; padding: 25px 10px; }
+        .direction { font-size: 45px; font-weight: bold; color: #a0aec0; margin: 0; }
+        .timer { font-size: 20px; color: #fff; margin-top: 5px; font-weight: bold; }
+        
+        /* পাসওয়ার্ড বক্সের ডিজাইন */
+        .login-box { width: 320px; background: #121b2d; border-radius: 15px; padding: 30px 20px; text-align: center; box-shadow: 0px 4px 15px rgba(0,0,0,0.5); }
+        .login-box h2 { margin-bottom: 20px; font-size: 22px; color: #ffea00; }
+        .login-box input { width: 90%; padding: 12px; background: #19263e; border: 1px solid #25395c; color: white; border-radius: 8px; font-size: 16px; text-align: center; margin-bottom: 15px; }
+        .login-box button { width: 100%; padding: 12px; background: #00ff88; border: none; color: #0b111e; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .error-msg { color: #ff4a4a; font-size: 13px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+<!-- পাসওয়ার্ড ভেরিফিকেশন স্ক্রিন -->
+<div class="login-box" id="auth-screen">
+    <h2>BBZ BOT LOGIN</h2>
+    <input type="password" id="bot-pass" placeholder="Enter Bot Password">
+    <button onclick="checkPassword()">LOGIN TO BOT</button>
+    <p class="error-msg" id="err-text">ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।</p>
+</div>
+
+<!-- বটের মূল ড্যাশবোর্ড -->
+<div class="bot-container" id="bot-dashboard">
+    <div class="header">
+        <div class="logo">B B Z</div>
+        <div class="status" id="bot-status">CONNECTING...</div>
+    </div>
+    
+    <div class="step-badge" id="step-text">STEP 1/5</div>
+    <div class="label">Quotex Pair</div>
+    <div style="background:#19263e; padding: 12px; border-radius: 8px; font-size:13px; text-align:left; border: 1px solid #25395c; margin-top:5px; color:#ffea00; font-weight:bold;">
+        USD/BRL (OTC Mode)
+    </div>
+
+    <div class="signal-box">
+        <p class="direction" id="signal-text">WAIT</p>
+        <div class="timer" id="timer">00:00</div>
+    </div>
+</div>
+
+<script>
+    function checkPassword() {
+        const userPass = document.getElementById('bot-pass').value;
+        const correctPass = "12344321"; // আপনার সেট করা নতুন পাসওয়ার্ড
+        
+        if(userPass === correctPass) {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('bot-dashboard').style.display = 'block';
+            startBotConnection(); 
+        } else {
+            document.getElementById('err-text').style.display = 'block';
+        }
+    }
+
+    function startBotConnection() {
+        // ক্লাউড সার্ভার (Render) তৈরি হলে আপনার অ্যাপের নাম এখানে বসাবেন
+        const serverURL = 'wss://://onrender.com'; 
+        const socket = new WebSocket(serverURL);
+
+        socket.onopen = () => { 
+            document.getElementById('bot-status').innerText = "LIVE ACTIVE"; 
+        };
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            document.getElementById('timer').innerText = data.timer;
+            document.getElementById('step-text').innerText = data.step;
+            const signalText = document.getElementById('signal-text');
+            signalText.innerText = data.signal;
+            signalText.style.color = data.signal === "UP" ? "#00ff88" : (data.signal === "DOWN" ? "#ff4a4a" : "#a0aec0");
+        };
+        socket.onclose = () => { 
+            document.getElementById('bot-status').innerText = "OFFLINE"; 
+            document.getElementById('bot-status').style.color = "#ff4a4a";
+        };
+    }
+</script>
+</body>
+</html>
